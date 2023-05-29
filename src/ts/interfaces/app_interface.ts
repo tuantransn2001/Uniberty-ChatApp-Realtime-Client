@@ -1,3 +1,7 @@
+import {
+  ObjectDynamicValueAttributes,
+  HttpException,
+} from "./global_interfaces";
 export interface UserAttributes {
   id?: string;
   name?: string;
@@ -20,6 +24,18 @@ export interface ConversationAttributes {
   messages: Array<MessageAttributes>;
 }
 
+export interface RestFullAPIAttributes {
+  success: {
+    statusCode: number;
+    message: string;
+    data: ObjectDynamicValueAttributes;
+  };
+  fail: {
+    statusCode: number;
+    error: HttpException;
+  };
+}
+
 export interface SocketContextAttributes {
   socket?: any;
   userContactInfo?: Object;
@@ -32,4 +48,6 @@ export interface SocketContextAttributes {
   setRoomID?: Function;
   conversations?: Object;
   setConversations?: Function;
+  userContactList?: Array<any>;
+  setUserContactList?: Function;
 }
