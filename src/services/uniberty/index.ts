@@ -133,29 +133,32 @@ class UnibertyAPIServices {
       handleCatchError(customErr);
     }
   }
-  public static async getConversation(conversationID: string) {
+  public static async getConversation(
+    members: Array<ObjectDynamicValueAttributes>
+  ) {
     try {
       const getConversationResult: ObjectDynamicValueAttributes = {};
 
       await (
         await RestFullAPIRequest.createInstance(CHAT_BASE_URL)
       )
-        .get(`conversation/get-by-ids`, {
-          params: { conversationID },
+        .post(`conversation/get-by-members`, {
+          members,
         })
         .then((response) => {
           switch (response.status) {
             case STATUS_CODE.STATUS_CODE_200: {
               Object.assign(getConversationResult, {
-                status: API_RESPONSE_STATUS.SUCCESS,
+                status: STATUS_CODE.STATUS_CODE_200,
                 message: STATUS_MESSAGE.SUCCESS,
+                data: response.data.data,
               });
               break;
             }
-            case STATUS_CODE.STATUS_CODE_204: {
+            case STATUS_CODE.STATUS_CODE_404: {
               Object.assign(getConversationResult, {
-                status: API_RESPONSE_STATUS.SUCCESS,
-                message: STATUS_MESSAGE.NO_CONTENT,
+                status: STATUS_CODE.STATUS_CODE_404,
+                message: STATUS_MESSAGE.NOT_FOUND,
               });
               break;
             }
@@ -164,17 +167,18 @@ class UnibertyAPIServices {
         .catch((err) => {
           const { message }: HttpException = err as HttpException;
           Object.assign(getConversationResult, {
-            status: API_RESPONSE_STATUS.FAIL,
+            status: STATUS_CODE.STATUS_CODE_404,
             message,
           });
         });
+
       return getConversationResult;
     } catch (err) {
       const customErr: HttpException = err as HttpException;
       handleCatchError(customErr);
     }
   }
-  public static async getContactList(id: string, type: string) {
+  public static async getContactList(id: number, type: string) {
     try {
       const contactListResult: ObjectDynamicValueAttributes = {};
 
@@ -214,7 +218,7 @@ class UnibertyAPIServices {
       await (
         await RestFullAPIRequest.createInstance(API_STUFF.uniberty_baseURL)
       )
-        .post(`/api/admin/search-list-user`)
+        .post(`/api/admin/search-list-user`, ids)
         .then((response: ObjectDynamicValueAttributes) => {
           Object.assign(searchListUserResult, {
             status: API_RESPONSE_STATUS.SUCCESS,

@@ -1,4 +1,6 @@
 import { useSocket } from "../../../../contexts/socketContext";
+import UnibertyAPIServices from "../../../../services/uniberty";
+import { STATUS_CODE } from "../../../../ts/enums/api_enums";
 import { ObjectDynamicValueAttributes } from "../../../../ts/interfaces/global_interfaces";
 import {
   UserListStyled,
@@ -18,16 +20,12 @@ const DropDown = ({
   userList,
   handleAddToChat,
 }: PropsAttributes): JSX.Element => {
-  const _currentUserProfile: React.Dispatch<
-    React.SetStateAction<ObjectDynamicValueAttributes>
-  > = useSocket().currentUserProfile as React.Dispatch<
-    React.SetStateAction<ObjectDynamicValueAttributes>
-  >;
-  const _setUserContactInfo: React.Dispatch<
-    React.SetStateAction<ObjectDynamicValueAttributes>
-  > = useSocket().setUserContactInfo as React.Dispatch<
-    React.SetStateAction<ObjectDynamicValueAttributes>
-  >;
+  const _socket = useSocket().socket as any;
+  const _setUserContactInfo = useSocket().setUserContactInfo as Function;
+  const _currentUserProfile = useSocket()
+    .currentUserProfile as ObjectDynamicValueAttributes;
+  const _setMessages = useSocket().setMessages as Function;
+  const _setRoomID = useSocket().setRoomID as Function;
 
   return (
     <UserListWrapperStyled>
@@ -39,9 +37,12 @@ const DropDown = ({
               <ButtonStyled
                 onClick={() => {
                   handleAddToChat(
+                    _socket,
                     _currentUserProfile,
                     user,
-                    _setUserContactInfo
+                    _setUserContactInfo,
+                    _setRoomID,
+                    _setMessages
                   );
                 }}
               >

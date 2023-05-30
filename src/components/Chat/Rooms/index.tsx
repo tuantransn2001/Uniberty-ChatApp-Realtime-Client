@@ -13,8 +13,7 @@ import {
   InputWrapperStyled,
 } from "./styles";
 import { useDebounce } from "../../../hooks";
-
-import { API_RESPONSE_STATUS } from "../../../ts/enums/api_enums";
+import { API_RESPONSE_STATUS, STATUS_CODE } from "../../../ts/enums/api_enums";
 import UnibertyAPIServices from "../../../services/uniberty";
 import { ObjectDynamicValueAttributes } from "../../../ts/interfaces/global_interfaces";
 import DropDown from "./DropDown";
@@ -28,63 +27,38 @@ export default function Rooms({}): JSX.Element {
 
   const handleAddToChat = useCallback(
     async (
-      currentUserProfile2: ObjectDynamicValueAttributes,
-      userContactInfo2: ObjectDynamicValueAttributes,
-      setUserContactInfo2: Function
+      socket: any,
+      currentUserProfile: ObjectDynamicValueAttributes,
+      userContactInfo: ObjectDynamicValueAttributes,
+      setUserContactInfo: Function,
+      setRoomID: Function,
+      setMessages: Function
     ) => {
-      // * ========================================
-      // ? Set user contact profile
-      // * ========================================
-      setUserContactInfo2({ ...userContactInfo2 });
-      // * ========================================
-      // ? Get conversation
-      // * ========================================
-      // * ========================================
-      // ? Get contact list
-      // * ========================================
+      const { id, name, type, avatar } = userContactInfo;
+      setUserContactInfo({ id, name, type, avatar });
 
-      await UnibertyAPIServices.getContactList(
-        currentUserProfile2.id,
-        currentUserProfile2.type
-      );
+      const members = [
+        { id: currentUserProfile.id.toString(), type: currentUserProfile.type },
+        { id: userContactInfo.id.toString(), type: userContactInfo.type },
+      ];
+      const { status, data }: ObjectDynamicValueAttributes =
+        (await UnibertyAPIServices.getConversation(
+          members
+        )) as ObjectDynamicValueAttributes;
 
-      // switch (status) {
-      //   case API_RESPONSE_STATUS.SUCCESS: {
-      //     // * ========================================
-      //     // ? Handle Request Success
-      //     // * ========================================
+      switch (status) {
+        case STATUS_CODE.STATUS_CODE_200: {
+          socket.emit("JOIN_ROOM", data.id);
+          setMessages([...data.messages]);
+          break;
+        }
+        case STATUS_CODE.STATUS_CODE_404: {
+          socket.emit("JOIN_ROOM", "");
+          setMessages(new Array());
+          break;
+        }
+      }
 
-      //     switch (message) {
-      //       case STATUS_MESSAGE.SUCCESS: {
-      //         // * ========================================
-      //         // ? User has been chatted before
-      //         // * ========================================
-      //         break;
-      //       }
-      //       case STATUS_MESSAGE.NO_CONTENT: {
-      //         // * ========================================
-      //         // ? User hasn't been chatted before
-      //         // * ========================================
-      //         break;
-      //       }
-      //     }
-      //     break;
-      //   }
-      //   case API_RESPONSE_STATUS.FAIL: {
-      //     // * ========================================
-      //     // ! Handle Request Fail
-      //     // * ========================================
-      //     break;
-      //   }
-      // }
-      // * ========================================
-      //  ? Add room
-      // * ========================================
-
-      // * ========================================
-      // ? Reset search user list
-      // * ========================================
-      if (inputRef.current != null) inputRef.current.value = "";
       setUserSearchList(new Array());
     },
     []

@@ -5,7 +5,6 @@ import { LoadingButton } from "@mui/lab";
 import UnibertyAPIServices from "../../services/uniberty";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import { buttonCustomStyle } from "./style";
-
 import {
   AppleIcon,
   FacebookIcon,
@@ -29,13 +28,16 @@ import {
 } from "./style/index";
 import { loginBG } from "../../assets/img/login/loginBG";
 import { unibertyLogo } from "../../assets/img/logo/logo";
-import { API_RESPONSE_STATUS } from "../../ts/enums/api_enums";
+import { API_RESPONSE_STATUS, STATUS_CODE } from "../../ts/enums/api_enums";
 import { ObjectDynamicValueAttributes } from "../../ts/interfaces/global_interfaces";
 const Login = ({}): JSX.Element => {
   const navigate = useNavigate();
+  const _socket = useSocket().socket as any;
   const _currentUserProfile = useSocket()
     .currentUserProfile as ObjectDynamicValueAttributes;
   const _setCurrentUserProfile = useSocket().setCurrentUserProfile as Function;
+  const _setUserContactInfo = useSocket().setUserContactInfo as Function;
+  const _setMessages = useSocket().setMessages as Function;
   const _setUserContactList = useSocket().setUserContactList as Function;
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [email, setName] = React.useState<string>("");
@@ -43,7 +45,7 @@ const Login = ({}): JSX.Element => {
   const [_, setAccessTokenLocalStorage] = useLocalStorage("token", "");
 
   const handleOnSubmit = async (): Promise<any> => {
-    if (email && password) {
+    if (true) {
       setIsLoading(true);
       const formData = new FormData();
 
@@ -89,7 +91,6 @@ const Login = ({}): JSX.Element => {
                   id.toString(),
                   "admissions_officer"
                 )) as ObjectDynamicValueAttributes;
-
               switch (getContactListResult.status) {
                 case API_RESPONSE_STATUS.SUCCESS: {
                   _setUserContactList([...getContactListResult.data]);
@@ -99,6 +100,15 @@ const Login = ({}): JSX.Element => {
                 }
               }
 
+              // * ============================================================
+              // * Handle Set First Conversation Default
+              // * ============================================================
+
+              if (getContactListResult.data.length > 0) {
+                const defaultConversation = getContactListResult.data[0];
+                _socket.emit("JOIN_ROOM", defaultConversation.conversationID);
+                _setMessages([...defaultConversation.messages]);
+              }
               break;
             }
             case API_RESPONSE_STATUS.FAIL: {

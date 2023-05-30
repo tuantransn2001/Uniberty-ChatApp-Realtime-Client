@@ -12,9 +12,10 @@ export interface UserAttributes {
 }
 
 export interface MessageAttributes {
-  author: string;
+  sender: { id: string; type: string };
   content: string;
-  createdAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface ConversationAttributes {
@@ -46,8 +47,8 @@ export interface SocketContextAttributes {
   setIsOnline?: Function;
   roomID?: string;
   setRoomID?: Function;
-  conversations?: Object;
-  setConversations?: Function;
+  messages?: Object;
+  setMessages?: Function;
   userContactList?: Array<any>;
   setUserContactList?: Function;
 }

@@ -33,22 +33,24 @@ interface ContactItemProps {
 const ContactItem = (props: ContactItemProps): JSX.Element => {
   const { id, name, type, avatar } = props.userInfo;
   const { createdAt, content } = props.lastMessage;
-  const handleAddToChat = props.handleAddToChat;
-
+  const { handleAddToChat } = props;
+  const _socket = useSocket().socket as any;
   const _currentUserProfile = useSocket()
     .currentUserProfile as ObjectDynamicValueAttributes;
-  const _userContactInfo = useSocket()
-    .userContactInfo as ObjectDynamicValueAttributes;
-  const _setUserContactInfo = useSocket()
-    .setUserContactInfo as ObjectDynamicValueAttributes;
+  const _setUserContactInfo = useSocket().setUserContactInfo as Function;
+  const _setRoomID = useSocket().setRoomID as Function;
+  const _setMessages = useSocket().setMessages as Function;
 
   return (
     <ButtonStyled
       onClick={() => {
         handleAddToChat(
+          _socket,
           _currentUserProfile,
-          _userContactInfo,
-          _setUserContactInfo
+          props.userInfo,
+          _setUserContactInfo,
+          _setRoomID,
+          _setMessages
         );
       }}
     >
@@ -75,12 +77,17 @@ const ContactList = (props: ContactListProps): JSX.Element => {
           _userContactList.map((contactItem) => {
             const { members, messages, conversationID } = contactItem;
             const { id, name, type, avatar } = members[0];
-            const { createdAt, content } = messages[0];
+            const { createdAt, content } = messages[messages.length - 1];
             return (
               <ContactLiTagStyled key={conversationID}>
                 <ContactItem
                   handleAddToChat={props.handleAddToChat}
-                  userInfo={{ id, name, type, avatar }}
+                  userInfo={{
+                    id,
+                    name,
+                    type,
+                    avatar,
+                  }}
                   lastMessage={{
                     createdAt,
                     content,
