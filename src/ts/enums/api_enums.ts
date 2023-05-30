@@ -1,7 +1,7 @@
 enum API_STUFF {
   chat_baseURL = `http://localhost:4000`,
   uniberty_baseURL = `http://103.57.223.118:8888`,
-  token = `2d06eb36-6b99-4b6c-b9f1-c81defbcf0f7`,
+  token = `5cc085cf-0c55-4102-ae86-1456d613aa21`,
 }
 
 enum API_RESPONSE_STATUS {
@@ -18,8 +18,6 @@ enum STATUS_MESSAGE {
   UN_AUTHORIZE = "Unauthorize",
   NOT_ACCEPTABLE = "Not Acceptable",
 }
-
-
 
 enum STATUS_CODE {
   STATUS_CODE_200 = 200, // * Get / Modify

@@ -27,7 +27,6 @@ const SocketsProvider = ({ children }: any) => {
   const [currentUserProfile, setCurrentUserProfile] =
     React.useState<ObjectDynamicValueAttributes>({});
   const [userContactList, setUserContactList] = React.useState<Array<any>>([]);
-
   // * ============================================================
   // * Handle Get ContactList
   // * ============================================================
@@ -43,6 +42,10 @@ const SocketsProvider = ({ children }: any) => {
           setUserContactList([...getContactListResult.data]);
           break;
         }
+        case API_RESPONSE_STATUS.FAIL: {
+          setUserContactList([]);
+          break;
+        }
       }
     })();
   }, [roomID, messages]);
@@ -54,7 +57,7 @@ const SocketsProvider = ({ children }: any) => {
     const handleSetConnectStatus = (event: any) => {
       if (event.type === "beforeunload") {
         event.preventDefault();
-        socket.emit("offline", currentUserProfile.id);
+        socket.emit("offline", currentUserProfile?.id);
         event.returnValue = "";
       } else if (event.type === "online" || "offline") {
         setIsOnline(navigator.onLine);
@@ -76,7 +79,7 @@ const SocketsProvider = ({ children }: any) => {
   =========================== */
   React.useEffect(() => {
     const connect_status: string = isOnline ? "ONLINE" : "OFFLINE";
-    socket.emit(connect_status, currentUserProfile.id);
+    socket.emit(connect_status, currentUserProfile?.id);
   }, [_ENDPOINT, isOnline]);
 
   socket.on("JOINED_ROOM", (response: RestFullAPIAttributes["success"]) => {
@@ -88,7 +91,57 @@ const SocketsProvider = ({ children }: any) => {
   });
 
   socket.on(
-    "UPDATE_MESSAGE_EXPECT_SENDER" || "CREATED_AND_JOIN_ROOM",
+    "CREATED_AND_JOIN_ROOM",
+    async (response: RestFullAPIAttributes["success"]) => {
+      const isMemberOfConversation =
+        response.data.members.findIndex(
+          (member: ObjectDynamicValueAttributes) => {
+            return (
+              +member.id === currentUserProfile.id &&
+              member.type === currentUserProfile.type
+            );
+          }
+        ) !== -1;
+
+      const contactMemberIndex = response.data.members.findIndex(
+        (member: ObjectDynamicValueAttributes) => {
+          return (
+            +member.id !== currentUserProfile.id ||
+            member.type !== currentUserProfile.type
+          );
+        }
+      );
+
+      switch (response.statusCode) {
+        case STATUS_CODE.STATUS_CODE_200: {
+          const {
+            data: { conversation_id, messages },
+          } = response;
+
+          if (isMemberOfConversation) {
+            const ids = {
+              ids: {
+                [response.data.members[contactMemberIndex].type]: [
+                  response.data.members[contactMemberIndex].id,
+                ],
+              },
+            };
+
+            await UnibertyAPIServices.searchListUser(ids).then(
+              ({ data: userContactInfoList }: any) => {
+                socket.emit("JOIN_ROOM", conversation_id);
+                setUserContactInfo(userContactInfoList[0]);
+                setMessages([...messages]);
+              }
+            );
+          }
+        }
+      }
+    }
+  );
+
+  socket.on(
+    "UPDATE_MESSAGE_EXPECT_SENDER",
     (response: RestFullAPIAttributes["success"]) => {
       switch (response.statusCode) {
         case STATUS_CODE.STATUS_CODE_200: {
@@ -97,16 +150,6 @@ const SocketsProvider = ({ children }: any) => {
       }
     }
   );
-  // socket.on(
-  //   "CREATED_AND_JOIN_ROOM",
-  //   (serverRoomID: string, foundConversation: any) => {
-  //     // ? Check server roomID equal client roomID
-  //     if (serverRoomID === roomID) {
-  //       const updatedConversation = { ...foundConversation };
-  //       setConversations(updatedConversation);
-  //     }
-  //   }
-  // );
 
   return (
     <SocketContext.Provider

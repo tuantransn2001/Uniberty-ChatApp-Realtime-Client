@@ -45,7 +45,7 @@ const Login = ({}): JSX.Element => {
   const [_, setAccessTokenLocalStorage] = useLocalStorage("token", "");
 
   const handleOnSubmit = async (): Promise<any> => {
-    if (true) {
+    if (email && email) {
       setIsLoading(true);
       const formData = new FormData();
 
@@ -75,14 +75,14 @@ const Login = ({}): JSX.Element => {
               // * Handle Case Get Info Success
               // * ============================================================
               const { id, email, name } = getInfoResult.data;
-              _setCurrentUserProfile(
-                Object.assign(_currentUserProfile, {
+              _setCurrentUserProfile({
+                ...{
                   id,
                   name,
                   email,
                   type: "admissions_officer",
-                })
-              );
+                },
+              });
               // * ============================================================
               // * Handle Get ContactList
               // * ============================================================
@@ -91,24 +91,37 @@ const Login = ({}): JSX.Element => {
                   id.toString(),
                   "admissions_officer"
                 )) as ObjectDynamicValueAttributes;
+
               switch (getContactListResult.status) {
                 case API_RESPONSE_STATUS.SUCCESS: {
                   _setUserContactList([...getContactListResult.data]);
+
+                  // * ============================================================
+                  // * Handle Set First Conversation Default
+                  // * ============================================================
+
+                  if (getContactListResult.data.length > 0) {
+                    const defaultConversation = getContactListResult.data[0];
+                    _socket.emit(
+                      "JOIN_ROOM",
+                      defaultConversation.conversationID
+                    );
+                    _setMessages([...defaultConversation.messages]);
+                  }
+
+                  setIsLoading(false);
+                  navigate("/chat");
+                  break;
+                }
+                case API_RESPONSE_STATUS.FAIL: {
+                  _socket.emit("JOIN_ROOM", "");
+                  _setMessages([]);
                   setIsLoading(false);
                   navigate("/chat");
                   break;
                 }
               }
 
-              // * ============================================================
-              // * Handle Set First Conversation Default
-              // * ============================================================
-
-              if (getContactListResult.data.length > 0) {
-                const defaultConversation = getContactListResult.data[0];
-                _socket.emit("JOIN_ROOM", defaultConversation.conversationID);
-                _setMessages([...defaultConversation.messages]);
-              }
               break;
             }
             case API_RESPONSE_STATUS.FAIL: {

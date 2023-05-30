@@ -10,10 +10,10 @@ import {
 } from "../../ts/enums/api_enums";
 
 interface IDListAttributes {
-  [type: string]: Array<string>;
+  [type: string]: any;
 }
 
-const CHAT_BASE_URL: string = `${API_STUFF.chat_baseURL}/uniberty/api`;
+const CHAT_BASE_URL: string = `${API_STUFF.chat_baseURL}/ws`;
 class UnibertyAPIServices {
   public static async login(
     url: string,
@@ -178,7 +178,7 @@ class UnibertyAPIServices {
       handleCatchError(customErr);
     }
   }
-  public static async getContactList(id: number, type: string) {
+  public static async getContactList(id: string, type: string) {
     try {
       const contactListResult: ObjectDynamicValueAttributes = {};
 
@@ -218,13 +218,17 @@ class UnibertyAPIServices {
       await (
         await RestFullAPIRequest.createInstance(API_STUFF.uniberty_baseURL)
       )
-        .post(`/api/admin/search-list-user`, ids)
+        .post(`/api/admin/search-list-user`, ids, {
+          headers: { Authorization: `Bearer ${API_STUFF.token}` },
+        })
         .then((response: ObjectDynamicValueAttributes) => {
           Object.assign(searchListUserResult, {
             status: API_RESPONSE_STATUS.SUCCESS,
-            data: response,
+            data: response.data,
           });
         });
+
+      return searchListUserResult;
     } catch (err) {
       const customErr: HttpException = err as HttpException;
       handleCatchError(customErr);

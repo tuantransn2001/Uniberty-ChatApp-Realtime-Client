@@ -47,13 +47,13 @@ const handleSendRoomMessage = async (
         "UPDATE_SENDER_MESSAGE",
         (response: RestFullAPIAttributes["success"]) => {
           const { statusCode, data } = response;
+
           switch (statusCode) {
             case STATUS_CODE.STATUS_CODE_200: {
               socket.emit("JOIN_ROOM", data.id);
               // ? Receive response success
               setMessage([...data.messages]);
               // ? Update Last messages
-
               if (inputRef.current !== null) inputRef.current.value = "";
               break;
             }
